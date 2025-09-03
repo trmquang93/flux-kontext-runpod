@@ -1,22 +1,41 @@
 # GitHub Actions Workflows
 
-## Disabled Workflows
+## Manual Docker Build Workflow
 
-### build-docker.yml.disabled
-The Docker build workflow has been disabled because RunPod serverless builds directly from source code.
+### build-docker.yml
+The Docker build workflow is configured for **manual triggering only**.
 
-To re-enable automated Docker builds:
-```bash
-mv build-docker.yml.disabled build-docker.yml
-```
+**Primary Deployment**: RunPod builds directly from source
+**Manual Builds**: Available for testing or alternative deployments
 
-## RunPod Source Builds
+## Usage
+
+### Manual Trigger
+1. Go to GitHub Actions tab in your repository
+2. Select "Build and Push Docker Image" workflow
+3. Click "Run workflow"
+4. Optional: Specify custom tag (defaults to "latest")
+5. Click "Run workflow" button
+
+### Outputs
+- `ghcr.io/trmquang93/flux-kontext-runpod:latest` (or custom tag)
+- `ghcr.io/trmquang93/flux-kontext-runpod:manual-<sha>`
+
+## RunPod Source Builds (Primary)
 RunPod will:
 - Clone the repository directly
-- Build the Docker image using the Dockerfile
+- Build the Docker image using the Dockerfile  
 - Deploy automatically on repository updates
+- Faster deployment (no registry intermediary)
 
-This provides:
-- Faster deployment (no registry push/pull)
-- Direct source-to-container builds
-- Automatic updates on git push
+## Re-enabling Automatic Builds
+To make the workflow trigger on push/PR again:
+```yaml
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    # ... manual trigger config
+```
