@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY updated_requirements.txt requirements.txt
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
@@ -41,9 +41,10 @@ RUN pip install --no-cache-dir \
 # Install xformers for memory optimization
 RUN pip install --no-cache-dir xformers --index-url https://download.pytorch.org/whl/cu118
 
-# Copy application files
-COPY flux_dev_controlnet.py .
-COPY updated_runpod_handler.py runpod_handler.py
+# Create models directory and copy application files
+RUN mkdir -p models
+COPY models/flux_dev_controlnet.py models/
+COPY runpod_handler.py .
 COPY entrypoint.sh .
 
 # Make entrypoint executable
