@@ -34,6 +34,7 @@ RUN apt-get update --yes && \
     apt-get upgrade --yes && \
     apt install --yes --no-install-recommends git wget curl bash libgl1 software-properties-common openssh-server nginx rsync ffmpeg && \
     apt-get install --yes --no-install-recommends build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev git-lfs && \
+    apt-get install --yes --no-install-recommends libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1 && \
     add-apt-repository ppa:deadsnakes/ppa && \
     apt install python3.10-dev python3.10-venv -y --no-install-recommends && \
     apt-get autoremove -y && \
@@ -51,8 +52,7 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
 # Install base packages and core dependencies
 RUN pip install -U wheel setuptools packaging 
 
-# Install core RunPod functionality first
-RUN pip install --no-cache-dir runpod>=1.6.0 websocket-client
+# Note: RunPod will be installed with other dependencies via requirements.txt to avoid conflicts
 
 # Install PyTorch with CUDA support (matching proven version) - MUST be installed before ML libraries
 RUN pip install --no-cache-dir torch==2.7.0+cu128 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
@@ -101,9 +101,9 @@ ENV NUMEXPR_NUM_THREADS=4
 # Expose port for health checks
 EXPOSE 8000
 
-# Health check - validate critical dependencies
+# Health check - validate critical dependencies including cv2 and runpod.serverless
 HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
-    CMD python -c "import torch, diffusers, runpod; from diffusers import FluxKontextPipeline; print('Health check passed')" || exit 1
+    CMD python -c "import torch, diffusers, runpod, cv2; import runpod.serverless; from diffusers import FluxKontextPipeline; print('Health check passed')" || exit 1
 
 # Use enhanced entrypoint
 CMD ["/app/entrypoint.sh"]

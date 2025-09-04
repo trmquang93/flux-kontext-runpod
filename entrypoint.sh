@@ -36,11 +36,27 @@ for dep in dependencies:
             importlib.import_module('PIL')
         elif dep == 'cv2':
             importlib.import_module('cv2')
+            print(f'  ✅ {dep}')
+        elif dep == 'runpod':
+            # Test both main runpod module and serverless submodule
+            importlib.import_module('runpod')
+            try:
+                importlib.import_module('runpod.serverless')
+                print(f'  ✅ {dep} (with serverless support)')
+            except ImportError as serverless_err:
+                print(f'  ⚠️ {dep}: Main module OK, but serverless module missing: {serverless_err}')
+                print(f'  ❌ RunPod serverless functionality not available - this will cause startup failure')
+                sys.exit(1)
         else:
             importlib.import_module(dep)
-        print(f'  ✅ {dep}')
+            print(f'  ✅ {dep}')
     except ImportError as e:
         print(f'  ❌ {dep}: {e}')
+        if dep == 'cv2':
+            print(f'    💡 OpenCV missing - ensure opencv-python is installed and system dependencies are available')
+            print(f'    💡 Required system packages: libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender-dev libgomp1')
+        elif dep == 'runpod':
+            print(f'    💡 RunPod package missing - ensure runpod>=1.6.2 is installed')
         sys.exit(1)
 "
 

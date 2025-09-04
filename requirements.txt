@@ -1,8 +1,8 @@
 # Enhanced requirements for FLUX.1 Kontext-dev Server
 # Based on proven production dependencies for reliability and performance
 
-# Core RunPod and web framework
-runpod>=1.6.0
+# Core RunPod and web framework (updated for serverless compatibility)
+runpod>=1.6.2
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
@@ -33,6 +33,8 @@ controlnet-aux>=0.4.0
 # Image processing and utilities  
 Pillow>=10.0.0
 opencv-python>=4.8.0
+# Websocket support for RunPod serverless
+websocket-client>=1.6.4
 numpy>=1.24.0
 scipy>=1.11.0
 
@@ -45,5 +47,4 @@ einops>=0.7.0
 pydantic>=2.0.0
 python-jose[cryptography]>=3.3.0
 
-# WebSocket support (for potential ComfyUI integration)
-websocket-client>=1.6.0
+# Note: websocket-client moved above to consolidate with RunPod dependencies
