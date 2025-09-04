@@ -64,7 +64,7 @@ else:
 
 # System memory check
 echo "💾 System Memory Information:"
-free -h | awk 'NR==2{printf \"  Used: %s (%.1f%%)\n  Available: %s\n  Total: %s\n\", $3, $3*100/$2, $7, $2}'
+free -h | awk 'NR==2{printf "  Used: %s (%.1f%%)\n  Available: %s\n  Total: %s\n", $3, $3*100/$2, $7, $2}'
 
 # Cache directory setup
 echo "📁 Setting up model cache directories..."
@@ -111,6 +111,13 @@ echo "🎯 Starting in $SERVER_MODE mode..."
 
 if [ "$SERVER_MODE" = "runpod" ]; then
     echo "🚀 Starting RunPod serverless handler..."
+    echo "🔍 Validating RunPod serverless module..."
+    python -c "
+import runpod.serverless
+print('✅ RunPod serverless module available')
+print(f'   Location: {runpod.serverless.__file__}')
+"
+    echo "🎯 Starting serverless handler..."
     python -u -m runpod.serverless.start --handler_file=runpod_handler.py
     
 elif [ "$SERVER_MODE" = "fastapi" ]; then

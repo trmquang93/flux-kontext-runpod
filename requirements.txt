@@ -11,13 +11,14 @@ requests>=2.31.0
 
 # PyTorch and CUDA (matching proven version)
 # Note: torch==2.7.0+cu128 installed via Dockerfile for proper CUDA support
+# These are commented out as they're installed separately in Dockerfile
 # torch==2.7.0+cu128
 # torchvision
 # torchaudio
 # xformers
 # triton
 
-# ML and AI frameworks optimized for FLUX.1 Kontext-dev
+# ML and AI frameworks optimized for FLUX.1 Kontext-dev (CRITICAL DEPENDENCIES)
 transformers>=4.51.3
 diffusers>=0.30.0
 accelerate>=0.24.0

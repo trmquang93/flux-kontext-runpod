@@ -48,30 +48,35 @@ RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
     python get-pip.py
 
-# Install base packages
+# Install base packages and core dependencies
 RUN pip install -U wheel setuptools packaging 
-RUN pip install -U "huggingface_hub[hf_transfer]"
-RUN pip install runpod websocket-client
 
-# Install PyTorch with CUDA support (matching proven version)
-RUN pip install torch==2.7.0+cu128 torchvision torchaudio xformers triton --index-url https://download.pytorch.org/whl/cu128
+# Install core RunPod functionality first
+RUN pip install --no-cache-dir runpod>=1.6.0 websocket-client
+
+# Install PyTorch with CUDA support (matching proven version) - MUST be installed before ML libraries
+RUN pip install --no-cache-dir torch==2.7.0+cu128 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+
+# Install xformers and triton after PyTorch
+RUN pip install --no-cache-dir xformers triton
 
 # Set PyTorch compilation flags
 ENV TORCH_CUDA_ARCH_LIST="8.9;9.0"
+
+# Install HuggingFace components
+RUN pip install --no-cache-dir "huggingface_hub[hf_transfer]>=0.19.0"
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt /app/requirements.txt
 WORKDIR /app
 
-# Install Python dependencies in optimized order
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+# Install ML dependencies AFTER PyTorch is installed
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir transformers>=4.51.3 && \
+    pip install --no-cache-dir diffusers>=0.30.0 && \
+    pip install --no-cache-dir accelerate>=0.24.0 && \
+    pip install --no-cache-dir safetensors>=0.4.0 && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir \
-        accelerate \
-        safetensors \
-        invisible-watermark \
-        requests \
-        pillow && \
     pip cache purge && \
     find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
@@ -96,9 +101,9 @@ ENV NUMEXPR_NUM_THREADS=4
 # Expose port for health checks
 EXPOSE 8000
 
-# Health check
+# Health check - validate critical dependencies
 HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
-    CMD python -c "import runpod_handler; print('Health check passed')" || exit 1
+    CMD python -c "import torch, diffusers, runpod; from diffusers import FluxKontextPipeline; print('Health check passed')" || exit 1
 
 # Use enhanced entrypoint
 CMD ["/app/entrypoint.sh"]
