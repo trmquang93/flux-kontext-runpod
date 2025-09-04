@@ -1,51 +1,38 @@
-# Enhanced requirements for FLUX.1 Kontext-dev Image Editing Server
-# Based on proven production dependencies for reliability and performance
+# FLUX.1-dev + ControlNet Requirements
+# Updated for public models with image editing capabilities
 
-# Core RunPod and web framework
-runpod>=1.6.0
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6
-aiofiles>=23.0.0
-requests>=2.31.0
+# Core ML and AI frameworks
+torch>=2.0.1,<2.2.0
+torchvision>=0.15.2,<0.17.0
+torchaudio>=2.0.2,<2.2.0
 
-# PyTorch and CUDA (matching Flux version)
-# Note: torch==2.7.0+cu128 installed via Dockerfile for proper CUDA support
-# torch==2.7.0+cu128
-# torchvision
-# torchaudio
-# xformers
-# triton
-
-# ML and AI frameworks - FLUX.1 Kontext specific
-transformers>=4.51.3
-diffusers>=0.31.0
+# Diffusers and transformers for FLUX.1-dev
+diffusers>=0.21.0,<0.30.0
+transformers>=4.35.0,<4.45.0
 accelerate>=0.24.0
-safetensors>=0.4.0
 
-# HuggingFace optimization (from Flux)
-huggingface_hub[hf_transfer]>=0.19.0
-
-# Image processing
-Pillow>=10.0.0
+# ControlNet and image processing
+controlnet-aux>=0.4.0
 opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+
+# Memory optimization
+xformers>=0.0.22,<0.0.23
+
+# Image processing and utilities  
+Pillow>=10.0.0
 numpy>=1.24.0
+scipy>=1.11.0
 
-# Additional ML utilities
-controlnet-aux>=0.0.10
-invisible-watermark>=0.2.0
+# Web framework for FastAPI mode
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
 
-# Web and API utilities
-pydantic>=2.0.0
-python-jose[cryptography]>=3.3.0
+# RunPod integration
+runpod>=1.6.0
 
-# WebSocket support (for potential ComfyUI integration like Flux)
-websocket-client>=1.6.0
-
-# FLUX.1 Kontext specific dependencies
-sentencepiece>=0.1.99
-protobuf>=4.21.0
-
-# Performance and memory optimization
-psutil>=5.9.0
-tqdm>=4.64.0
+# Utilities
+safetensors>=0.4.0
+omegaconf>=2.3.0
+einops>=0.7.0

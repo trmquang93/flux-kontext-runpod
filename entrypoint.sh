@@ -1,156 +1,178 @@
 #!/bin/bash
 
-# Enhanced entrypoint script for FLUX.1 Kontext-dev AI Editing Server
-# Based on proven production patterns for reliability and performance
+# Enhanced FLUX.1-dev + ControlNet Entrypoint Script
+# Production-ready startup with comprehensive validation
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-
-echo "🚀 Starting FLUX.1 Kontext-dev AI Editing Server (Enhanced)"
 echo "=================================================="
+echo "🚀 Starting FLUX.1-dev + ControlNet AI Editing Server (Enhanced)"
+echo ""
 
-# CUDA 검사 및 설정 (Enhanced pattern)
+# Environment validation
+echo "🔍 Environment validation:"
+echo "🔧 Server mode: ${SERVER_MODE:-runpod}"
+echo "  Expected memory: ~20GB VRAM (FLUX.1-dev + ControlNet)"
+echo "  Task: Image editing with ControlNet guidance"
+echo "  Model: black-forest-labs/FLUX.1-dev (public)"
+echo "  ControlNet: InstantX/FLUX.1-dev-Controlnet-Canny"
+
+# Check Python dependencies
+echo "🔍 Checking Python dependencies..."
+python -c "
+import sys
+import importlib
+
+dependencies = [
+    'torch',
+    'diffusers', 
+    'transformers',
+    'PIL',
+    'cv2',
+    'runpod'
+]
+
+for dep in dependencies:
+    try:
+        if dep == 'PIL':
+            importlib.import_module('PIL')
+        elif dep == 'cv2':
+            importlib.import_module('cv2')
+        else:
+            importlib.import_module(dep)
+        print(f'  ✅ {dep}')
+    except ImportError as e:
+        print(f'  ❌ {dep}: {e}')
+        sys.exit(1)
+"
+
+# CUDA validation
 echo "🔍 Checking CUDA availability..."
-
-# Python을 통한 CUDA 검사 (Enhanced pattern)
-python_cuda_check() {
-    python3 -c "
-import torch
-try:
-    if torch.cuda.is_available():
-        print('CUDA_AVAILABLE')
-        exit(0)
-    else:
-        print('CUDA_NOT_AVAILABLE')
-        exit(1)
-except Exception as e:
-    print(f'CUDA_ERROR: {e}')
-    exit(2)
-" 2>/dev/null
-}
-
-# CUDA 상태 확인
-CUDA_STATUS=$(python_cuda_check)
-CUDA_EXIT_CODE=$?
-
-case $CUDA_EXIT_CODE in
-    0)
-        echo "✅ CUDA is available and working"
-        ;;
-    1)
-        echo "❌ CUDA is not available"
-        echo "This may affect performance. FLUX.1 Kontext will run on CPU."
-        ;;
-    2)
-        echo "⚠️ CUDA check encountered an error"
-        echo "Proceeding anyway..."
-        ;;
-esac
-
-# GPU 정보 출력 (Enhanced pattern)
-if [ $CUDA_EXIT_CODE -eq 0 ]; then
-    echo "🖥️ GPU Information:"
-    python3 -c "
+python -c "
 import torch
 if torch.cuda.is_available():
-    print(f'  Device: {torch.cuda.get_device_name(0)}')
-    props = torch.cuda.get_device_properties(0)
-    print(f'  Memory: {props.total_memory / 1024**3:.1f}GB')
-    print(f'  Compute Capability: {props.major}.{props.minor}')
-    print(f'  Multi-processors: {props.multi_processor_count}')
+    print('✅ CUDA is available and working')
+    print(f'🖥️ GPU Information:')
+    for i in range(torch.cuda.device_count()):
+        print(f'  Device: {torch.cuda.get_device_name(i)}')
+        props = torch.cuda.get_device_properties(i)
+        print(f'  Memory: {props.total_memory / 1024**3:.1f}GB')
+        print(f'  Compute Capability: {props.major}.{props.minor}')
+        print(f'  Multi-processors: {props.multi_processor_count}')
+else:
+    print('❌ CUDA not available')
+    exit(1)
 "
-fi
 
-# 네트워크 볼륨 디렉토리 생성 (Enhanced pattern)
+# System memory check
+echo "💾 System Memory Information:"
+free -h | awk 'NR==2{printf \"  Used: %s (%.1f%%)\n  Available: %s\n  Total: %s\n\", $3, $3*100/$2, $7, $2}'
+
+# Cache directory setup
 echo "📁 Setting up model cache directories..."
-
-# Create cache directories if they don't exist
 mkdir -p /runpod-volume/.torch
-mkdir -p /runpod-volume/.huggingface
-mkdir -p /runpod-volume/.transformers
-
+mkdir -p /runpod-volume/.huggingface/hub
 echo "✅ Cache directories ready"
 
-# Python 모듈 검사 (Enhanced pattern)
-echo "🔍 Checking Python dependencies..."
+# Environment variables
+echo "🌍 Environment setup:"
+echo "  TORCH_HOME: ${TORCH_HOME}"
+echo "  HF_HOME: ${HF_HOME}"
+echo "  CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}"
 
-check_python_module() {
-    local module_name=$1
-    python3 -c "import $module_name" 2>/dev/null
-    if [ $? -eq 0 ]; then
-        echo "  ✅ $module_name"
-    else
-        echo "  ❌ $module_name (missing)"
-        return 1
-    fi
-}
-
-# Critical dependencies check
-echo "🧪 Verifying critical dependencies:"
-check_python_module "torch" || echo "  🚨 PyTorch not found!"
-check_python_module "diffusers" || echo "  🚨 Diffusers not found!"
-check_python_module "transformers" || echo "  🚨 Transformers not found!"
-check_python_module "PIL" || echo "  🚨 Pillow not found!"
-check_python_module "runpod" || echo "  🚨 RunPod not found!"
-
-# 메모리 정보 출력 (Enhanced pattern)
-echo "💾 System Memory Information:"
-python3 -c "
-import psutil
-mem = psutil.virtual_memory()
-print(f'  Total: {mem.total / 1024**3:.1f}GB')
-print(f'  Available: {mem.available / 1024**3:.1f}GB')
-print(f'  Used: {mem.used / 1024**3:.1f}GB ({mem.percent}%)')
-"
-
-# HuggingFace 토큰 확인 (선택적)
+# HuggingFace authentication
+echo "⚡ FLUX.1-dev + ControlNet Setup:"
 if [ -n "$HF_TOKEN" ]; then
-    echo "🤗 HuggingFace token found - private models accessible"
+    echo "🔑 HuggingFace token provided - full model access"
 else
     echo "ℹ️ No HuggingFace token - using public models only"
 fi
 
-# FLUX.1 Kontext specific setup
-echo "⚡ FLUX.1 Kontext-dev Setup:"
-echo "  Model: black-forest-labs/FLUX.1-Kontext-dev"
-echo "  Task: Text-based image editing"
-echo "  Expected memory: ~24GB VRAM (12B parameters)"
+# Pre-warm models (optional, for faster first request)
+if [ "$PREWARM_MODELS" = "true" ]; then
+    echo "🔥 Pre-warming models..."
+    python -c "
+from flux_dev_controlnet import FluxDevControlNetManager
+import logging
+logging.basicConfig(level=logging.INFO)
 
-# 서버 모드 결정 (Enhanced pattern)
-SERVER_MODE=${SERVER_MODE:-runpod}
-echo "🔧 Server mode: $SERVER_MODE"
-
-# 환경변수 검증
-echo "🔍 Environment validation:"
-echo "  CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-not set}"
-echo "  TORCH_HOME: ${TORCH_HOME:-not set}"
-echo "  HF_HOME: ${HF_HOME:-not set}"
-
-case $SERVER_MODE in
-    runpod|serverless)
-        echo "🚀 Starting RunPod serverless handler..."
-        exec python3 runpod_handler.py
-        ;;
-    fastapi|web)
-        echo "🚀 Starting FastAPI web server..."
-        exec uvicorn main:app --host 0.0.0.0 --port 8000
-        ;;
-    debug)
-        echo "🔍 Starting in debug mode..."
-        python3 -c "
-import torch
-import diffusers
-print(f'PyTorch version: {torch.__version__}')
-print(f'Diffusers version: {diffusers.__version__}')
-if torch.cuda.is_available():
-    print(f'CUDA version: {torch.version.cuda}')
-    print(f'cuDNN version: {torch.backends.cudnn.version()}')
-print('Debug mode - server not started')
+print('🔄 Initializing FLUX.1-dev + ControlNet...')
+manager = FluxDevControlNetManager()
+success = manager.initialize()
+if success:
+    print('✅ Models pre-warmed successfully')
+else:
+    print('❌ Model pre-warming failed')
 "
-        ;;
-    *)
-        echo "❌ Unknown server mode: $SERVER_MODE"
-        echo "Valid modes: runpod, fastapi, debug"
-        exit 1
-        ;;
-esac
+fi
+
+# Determine server mode and start
+SERVER_MODE=${SERVER_MODE:-runpod}
+
+echo "🎯 Starting in $SERVER_MODE mode..."
+
+if [ "$SERVER_MODE" = "runpod" ]; then
+    echo "🚀 Starting RunPod serverless handler..."
+    python -u -m runpod.serverless.start --handler_file=runpod_handler.py
+    
+elif [ "$SERVER_MODE" = "fastapi" ]; then
+    echo "🚀 Starting FastAPI server..."
+    python -c "
+import uvicorn
+from fastapi import FastAPI
+from runpod_handler import handler
+
+app = FastAPI(title='FLUX.1-dev + ControlNet API')
+
+@app.post('/process')
+async def process_image(job: dict):
+    return handler(job)
+
+@app.get('/health')
+async def health():
+    from runpod_handler import handle_health_check
+    return handle_health_check()
+
+uvicorn.run(app, host='0.0.0.0', port=8000)
+"
+
+elif [ "$SERVER_MODE" = "debug" ]; then
+    echo "🔍 Starting in debug mode..."
+    python -c "
+from flux_dev_controlnet import FluxDevControlNetManager
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+print('🐛 Debug mode - testing initialization...')
+manager = FluxDevControlNetManager()
+success = manager.initialize()
+print(f'Initialization result: {success}')
+
+if success:
+    print('🧪 Running basic test...')
+    from PIL import Image
+    import numpy as np
+    
+    # Create test image
+    test_image = Image.fromarray(np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8))
+    
+    # Test generation
+    result = manager.generate_image('A red apple', width=256, height=256)
+    if result:
+        print('✅ Generation test passed')
+    else:
+        print('❌ Generation test failed')
+    
+    # Test editing  
+    result = manager.edit_image(test_image, 'Make it blue')
+    if result:
+        print('✅ Editing test passed')
+    else:
+        print('❌ Editing test failed')
+
+print('🏁 Debug mode complete')
+"
+
+else
+    echo "❌ Unknown server mode: $SERVER_MODE"
+    echo "Available modes: runpod, fastapi, debug"
+    exit 1
+fi
