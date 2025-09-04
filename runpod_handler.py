@@ -1,6 +1,6 @@
 """
-Enhanced RunPod Serverless Handler for FLUX.1-dev + ControlNet
-Production-ready image editing with public models
+Enhanced RunPod Serverless Handler for FLUX.1 Kontext-dev
+Production-ready text-based image editing with 12B parameter model
 """
 
 import logging
@@ -9,8 +9,8 @@ import torch
 import traceback
 from datetime import datetime
 
-# Import the new FLUX.1-dev + ControlNet manager
-from models.flux_dev_controlnet import FluxDevControlNetManager
+# Import the FLUX.1 Kontext-dev manager
+from models.flux_kontext import FluxKontextManager
 
 # Configure logging
 logging.basicConfig(
@@ -23,19 +23,19 @@ logger = logging.getLogger(__name__)
 flux_manager = None
 
 def initialize_model():
-    """Initialize the FLUX.1-dev + ControlNet model"""
+    """Initialize the FLUX.1 Kontext-dev model"""
     global flux_manager
     
     try:
-        logger.info("🚀 Initializing FLUX.1-dev + ControlNet Manager...")
-        flux_manager = FluxDevControlNetManager()
+        logger.info("🚀 Initializing FLUX.1 Kontext-dev Manager...")
+        flux_manager = FluxKontextManager()
         
         success = flux_manager.initialize()
         if success:
-            logger.info("✅ FLUX.1-dev + ControlNet initialized successfully")
+            logger.info("✅ FLUX.1 Kontext-dev initialized successfully")
             return True
         else:
-            logger.error("❌ Failed to initialize FLUX.1-dev + ControlNet")
+            logger.error("❌ Failed to initialize FLUX.1 Kontext-dev")
             return False
             
     except Exception as e:
@@ -45,7 +45,7 @@ def initialize_model():
 
 def handler(job):
     """
-    Main RunPod serverless handler for FLUX.1-dev + ControlNet
+    Main RunPod serverless handler for FLUX.1 Kontext-dev
     
     Supported task types:
     - 'health': System health check

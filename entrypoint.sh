@@ -1,19 +1,19 @@
 #!/bin/bash
 
-# Enhanced FLUX.1-dev + ControlNet Entrypoint Script
+# Enhanced FLUX.1 Kontext-dev Entrypoint Script
 # Production-ready startup with comprehensive validation
 
 echo "=================================================="
-echo "🚀 Starting FLUX.1-dev + ControlNet AI Editing Server (Enhanced)"
+echo "🚀 Starting FLUX.1 Kontext-dev AI Editing Server (Enhanced)"
 echo ""
 
 # Environment validation
 echo "🔍 Environment validation:"
 echo "🔧 Server mode: ${SERVER_MODE:-runpod}"
-echo "  Expected memory: ~20GB VRAM (FLUX.1-dev + ControlNet)"
-echo "  Task: Image editing with ControlNet guidance"
-echo "  Model: black-forest-labs/FLUX.1-dev (public)"
-echo "  ControlNet: InstantX/FLUX.1-dev-Controlnet-Canny"
+echo "  Expected memory: ~24GB VRAM (FLUX.1 Kontext-dev 12B parameters)"
+echo "  Task: Text-based image editing with character consistency"
+echo "  Model: black-forest-labs/FLUX.1-Kontext-dev (12B parameters)"
+echo "  Features: Quality enhancement, style consistency, prompt-guided editing"
 
 # Check Python dependencies
 echo "🔍 Checking Python dependencies..."
@@ -79,7 +79,7 @@ echo "  HF_HOME: ${HF_HOME}"
 echo "  CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-0}"
 
 # HuggingFace authentication
-echo "⚡ FLUX.1-dev + ControlNet Setup:"
+echo "⚡ FLUX.1 Kontext-dev Setup:"
 if [ -n "$HF_TOKEN" ]; then
     echo "🔑 HuggingFace token provided - full model access"
 else
@@ -90,12 +90,12 @@ fi
 if [ "$PREWARM_MODELS" = "true" ]; then
     echo "🔥 Pre-warming models..."
     python -c "
-from flux_dev_controlnet import FluxDevControlNetManager
+from models.flux_kontext import FluxKontextManager
 import logging
 logging.basicConfig(level=logging.INFO)
 
-print('🔄 Initializing FLUX.1-dev + ControlNet...')
-manager = FluxDevControlNetManager()
+print('🔄 Initializing FLUX.1 Kontext-dev...')
+manager = FluxKontextManager()
 success = manager.initialize()
 if success:
     print('✅ Models pre-warmed successfully')
@@ -137,12 +137,12 @@ uvicorn.run(app, host='0.0.0.0', port=8000)
 elif [ "$SERVER_MODE" = "debug" ]; then
     echo "🔍 Starting in debug mode..."
     python -c "
-from flux_dev_controlnet import FluxDevControlNetManager
+from models.flux_kontext import FluxKontextManager
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
 print('🐛 Debug mode - testing initialization...')
-manager = FluxDevControlNetManager()
+manager = FluxKontextManager()
 success = manager.initialize()
 print(f'Initialization result: {success}')
 
@@ -154,19 +154,12 @@ if success:
     # Create test image
     test_image = Image.fromarray(np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8))
     
-    # Test generation
-    result = manager.generate_image('A red apple', width=256, height=256)
+    # Test text-based image editing
+    result = manager.edit_image(test_image, 'Make it a beautiful sunset scene')
     if result:
-        print('✅ Generation test passed')
+        print('✅ Text-based editing test passed')
     else:
-        print('❌ Generation test failed')
-    
-    # Test editing  
-    result = manager.edit_image(test_image, 'Make it blue')
-    if result:
-        print('✅ Editing test passed')
-    else:
-        print('❌ Editing test failed')
+        print('❌ Text-based editing test failed')
 
 print('🏁 Debug mode complete')
 "
