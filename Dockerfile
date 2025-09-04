@@ -6,6 +6,10 @@ FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
 # Set working directory
 WORKDIR /app
 
+# Prevent interactive prompts during build
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
 ENV TORCH_HOME=/runpod-volume/.torch
@@ -15,7 +19,7 @@ ENV DIFFUSERS_CACHE=/runpod-volume/.huggingface/hub
 ENV HF_HUB_CACHE=/runpod-volume/.huggingface/hub
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     wget \
     curl \
@@ -26,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     libgoogle-perftools4 \
     libtcmalloc-minimal4 \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
