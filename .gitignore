@@ -73,8 +73,7 @@ Thumbs.db
 # Docker
 .dockerignore
 
-# Model files and caches
-models/
+# Model files and caches (but keep Python model code)
 *.pth
 *.bin
 *.safetensors
