@@ -1,50 +1,38 @@
-# Enhanced requirements for FLUX.1 Kontext-dev Server
-# Based on proven production dependencies for reliability and performance
+# FLUX.1 Kontext-dev Server Dependencies
+# Optimized for RunPod Serverless deployment based on research findings
+# Note: runpod, torch, transformers, diffusers, accelerate, safetensors, and huggingface_hub 
+# are installed in Dockerfile for proper dependency resolution
 
-# Core RunPod and web framework (updated for serverless compatibility)
-runpod>=1.6.2
+# Web framework for FastAPI mode (optional)
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 python-multipart>=0.0.6
 aiofiles>=23.0.0
+
+# HTTP and networking
 requests>=2.31.0
-
-# PyTorch and CUDA (matching proven version)
-# Note: torch==2.7.0+cu128 installed via Dockerfile for proper CUDA support
-# These are commented out as they're installed separately in Dockerfile
-# torch==2.7.0+cu128
-# torchvision
-# torchaudio
-# xformers
-# triton
-
-# ML and AI frameworks optimized for FLUX.1 Kontext-dev (CRITICAL DEPENDENCIES)
-transformers>=4.51.3
-diffusers>=0.30.0
-accelerate>=0.24.0
-safetensors>=0.4.0
-
-# HuggingFace optimization (from proven implementation)
-huggingface_hub[hf_transfer]>=0.19.0
-
-# FLUX.1 Kontext-dev specific dependencies
-controlnet-aux>=0.4.0
-
-# Image processing and utilities  
-Pillow>=10.0.0
-opencv-python>=4.8.0
-# Websocket support for RunPod serverless
 websocket-client>=1.6.4
+
+# Image processing (opencv-python-headless preferred for serverless)
+Pillow>=10.0.0
+opencv-python-headless>=4.8.0
+
+# Scientific computing
 numpy>=1.24.0
 scipy>=1.11.0
 
-# Additional ML utilities for FLUX processing
+# System monitoring for entrypoint validation
+psutil>=5.9.0
+
+# FLUX.1 Kontext-dev specific dependencies
+controlnet-aux>=0.4.0
 invisible-watermark>=0.2.0
 omegaconf>=2.3.0
 einops>=0.7.0
 
-# Web and API utilities
+# API utilities
 pydantic>=2.0.0
 python-jose[cryptography]>=3.3.0
 
-# Note: websocket-client moved above to consolidate with RunPod dependencies
+# Logging and monitoring
+structlog>=23.0.0
