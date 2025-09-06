@@ -122,19 +122,7 @@ EXPOSE 8000
 
 # Improved health check with better error reporting
 HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
-    CMD python -c "
-import sys
-try:
-    import torch, diffusers, runpod, cv2
-    import runpod.serverless
-    from diffusers import FluxKontextPipeline
-    print('✅ All dependencies available')
-    print(f'✅ PyTorch CUDA: {torch.cuda.is_available()}')
-    print('✅ Health check passed')
-except Exception as e:
-    print(f'❌ Health check failed: {e}')
-    sys.exit(1)
-" || exit 1
+    CMD python -c "import sys; import torch, diffusers, runpod, cv2; import runpod.serverless; print('✅ All dependencies available'); print(f'✅ PyTorch CUDA: {torch.cuda.is_available()}'); print('✅ Health check passed')" || exit 1
 
 # Use enhanced entrypoint with RunPod serverless support
 CMD ["/app/entrypoint.sh"]

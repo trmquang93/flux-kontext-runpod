@@ -1,0 +1,53 @@
+# Minimal Dockerfile for GitHub Actions testing with Python 3.11
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Essential environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV RUNPOD_MODE=true
+ENV RUNPOD_DEBUG=true
+
+# Install essential system packages including git for GitHub installs
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install Python dependencies - minimal set for testing
+RUN pip install --upgrade pip && \
+    pip cache purge && \
+    pip install --no-cache-dir \
+    runpod==1.7.2 \
+    requests \
+    pillow \
+    torch>=2.0.0 \
+    torchvision>=0.15.0 \
+    transformers>=4.51.3 \
+    diffusers>=0.25.0 \
+    accelerate>=0.24.0 \
+    numpy>=1.24.0 \
+    fastapi>=0.104.0 \
+    uvicorn[standard]>=0.24.0 \
+    python-multipart>=0.0.6 \
+    pydantic>=2.0.0 \
+    opencv-python-headless
+
+# Copy application code
+COPY . .
+
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
+# Expose port for FastAPI mode
+EXPOSE 8000
+
+# Use flexible entrypoint that supports both modes
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Default to RunPod serverless mode
+# Override with: docker run -e SERVER_MODE=fastapi
+CMD []
