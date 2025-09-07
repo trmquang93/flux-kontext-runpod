@@ -39,6 +39,15 @@ class FluxDevControlNetManager:
     def initialize(self):
         """Initialize FLUX.1-dev and ControlNet pipelines"""
         try:
+            # Determine appropriate device mapping strategy
+            if self.device == "cuda" and torch.cuda.is_available():
+                device_map_strategy = "cuda"
+                logger.info(f"🔧 Using CUDA device mapping strategy")
+            else:
+                # For CPU or when CUDA is not available, use balanced or None
+                device_map_strategy = "balanced"
+                logger.info(f"🔧 Using balanced device mapping strategy")
+            
             logger.info("🔄 Loading FLUX.1-dev pipeline...")
             
             # Load main FLUX.1-dev pipeline
@@ -46,7 +55,7 @@ class FluxDevControlNetManager:
                 self.model_id,
                 torch_dtype=self.torch_dtype,
                 low_cpu_mem_usage=True,
-                device_map="auto"
+                device_map=device_map_strategy
             )
             
             logger.info("🔄 Loading FLUX ControlNet pipeline...")
@@ -56,7 +65,7 @@ class FluxDevControlNetManager:
                 self.controlnet_id,
                 torch_dtype=self.torch_dtype,
                 low_cpu_mem_usage=True,
-                device_map="auto"
+                device_map=device_map_strategy
             )
             
             # Memory optimization
