@@ -9,8 +9,8 @@ import torch
 import traceback
 from datetime import datetime
 
-# Import the FLUX.1 Kontext-dev manager
-from models.flux_kontext import FluxKontextManager
+# Import the FLUX.1-dev + ControlNet manager
+from flux_dev_controlnet import FluxDevControlNetManager
 
 # Configure logging
 logging.basicConfig(
@@ -23,19 +23,19 @@ logger = logging.getLogger(__name__)
 flux_manager = None
 
 def initialize_model():
-    """Initialize the FLUX.1 Kontext-dev model"""
+    """Initialize the FLUX.1-dev + ControlNet model"""
     global flux_manager
     
     try:
-        logger.info("🚀 Initializing FLUX.1 Kontext-dev Manager...")
-        flux_manager = FluxKontextManager()
+        logger.info("🚀 Initializing FLUX.1-dev + ControlNet Manager...")
+        flux_manager = FluxDevControlNetManager()
         
         success = flux_manager.initialize()
         if success:
-            logger.info("✅ FLUX.1 Kontext-dev initialized successfully")
+            logger.info("✅ FLUX.1-dev + ControlNet initialized successfully")
             return True
         else:
-            logger.error("❌ Failed to initialize FLUX.1 Kontext-dev")
+            logger.error("❌ Failed to initialize FLUX.1-dev + ControlNet")
             return False
             
     except Exception as e:
@@ -45,7 +45,7 @@ def initialize_model():
 
 def handler(job):
     """
-    Main RunPod serverless handler for FLUX.1 Kontext-dev
+    Main RunPod serverless handler for FLUX.1-dev + ControlNet
     
     Supported task types:
     - 'health': System health check
@@ -271,7 +271,17 @@ def handle_image_processing(job_input, task_type):
             'timestamp': datetime.now().isoformat()
         }
 
-# Initialize model when module is imported (for serverless environment)
-if __name__ != "__main__":
-    logger.info("🚀 Starting FLUX.1-dev + ControlNet serverless handler...")
+# RunPod serverless integration
+if __name__ == "__main__":
+    import runpod
+    logger.info("🚀 Starting FLUX.1-dev + ControlNet RunPod serverless handler...")
+    
+    # Initialize model for serverless
+    initialize_model()
+    
+    # Start RunPod serverless worker
+    runpod.serverless.start({"handler": handler})
+else:
+    # Initialize model when module is imported (for other use cases)
+    logger.info("🚀 FLUX.1-dev + ControlNet handler module imported")
     initialize_model()

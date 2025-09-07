@@ -155,9 +155,9 @@ if [ "$PREWARM_MODELS" = "true" ]; then
     echo "🔥 Pre-warming FLUX.1 Kontext-dev models..."
     python -c "
 try:
-    from models.flux_kontext import FluxKontextManager
+    from flux_dev_controlnet import FluxDevControlNetManager
     print('🔄 Initializing model pipeline...')
-    manager = FluxKontextManager()
+    manager = FluxDevControlNetManager()
     success = manager.initialize()
     if success:
         print('✅ Model pre-warming completed successfully')
@@ -194,7 +194,7 @@ print('   Starting serverless worker...')
     echo "🔄 Starting serverless worker with handler: runpod_handler.py"
     
     # Start the RunPod serverless worker
-    exec python -u -m runpod.serverless.start --handler_file=runpod_handler.py
+    exec python -u runpod_handler.py
     
 elif [ "$SERVER_MODE" = "fastapi" ]; then
     echo "🚀 Starting FastAPI development server..."
@@ -229,8 +229,8 @@ logging.basicConfig(level=logging.DEBUG)
 print('🐛 Debug mode - testing FLUX.1 Kontext-dev initialization...')
 
 try:
-    from models.flux_kontext import FluxKontextManager
-    manager = FluxKontextManager()
+    from flux_dev_controlnet import FluxDevControlNetManager
+    manager = FluxDevControlNetManager()
     success = manager.initialize()
     print(f'✅ Initialization successful: {success}')
     
@@ -251,9 +251,9 @@ try:
         )
         
         if result:
-            print('✅ Text-based image editing test passed')
+            print('✅ FLUX ControlNet image editing test passed')
         else:
-            print('❌ Text-based image editing test failed')
+            print('❌ FLUX ControlNet image editing test failed')
     
 except Exception as e:
     print(f'❌ Debug test failed: {e}')
